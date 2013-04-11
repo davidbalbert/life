@@ -1,3 +1,6 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+
 require 'matrix'
 
 class Matrix
@@ -63,12 +66,14 @@ class Board
   end
 end
 
-b = Board.random(40)
-system("clear")
-
-loop do
-  puts b
-  sleep 0.2
+if __FILE__ == $0
+  b = Board.random(40)
   system("clear")
-  b = b.next
+
+  loop do
+    puts b
+    sleep 0.2
+    system("clear")
+    b = b.next
+  end
 end
