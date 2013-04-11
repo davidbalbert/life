@@ -3,20 +3,32 @@ class Board
 
   def self.random(size)
     board = Array.new(size) do
-      Array.new(size) { rand(2) }
+      Array.new(size) { rand(10) == 0 ? 1 : 0 }
     end
     new(board)
   end
 
+  def self.parse(board_string)
+    new(board_string.split("\n").map { |row| row.split.map(&:to_i) })
+  end
+
   def initialize(board)
+    if board.size != board[0].size
+      raise "The board has to be square!"
+    end
+
     @size = board.size
     @board = board
   end
 
   def next
-    board_state = neighbor_counts.map do |row|
-      row.map do |i|
-        i == 3 || i == 4 ? 1 : 0
+    board_state = neighbor_counts.zip(@board).map do |row, old_row|
+      row.zip(old_row).map do |c, old_i|
+        if c == 3 || c == 4 && old_i == 1
+          1
+        else
+          0
+        end
       end
     end
 
@@ -32,14 +44,18 @@ class Board
   end
 
   def neighbor_counts
-    (-1..1).map { |i| (-1..1).map { |j| [i, j] } }.flatten(1).map do |row, col|
-      rotate_board(row, col)
-    end.reduce(Array.new(@size) { Array.new(@size) { 0 } }) do |res, arr|
+    translated_matricies.reduce(Array.new(@size) { Array.new(@size) { 0 } }) do |res, arr|
       each_coordinate do |row, col|
         res[row][col] += arr[row][col]
       end
 
       res
+    end
+  end
+
+  def translated_matricies
+    [-1,0,1].product([-1,0,1]).map do |row, col|
+      rotate_board(row, col)
     end
   end
 
@@ -58,10 +74,12 @@ class Board
   end
 end
 
-b = Board.random(10)
+b = Board.random(40)
+system("clear")
+
 loop do
-  b = b.next
   puts b
-  sleep 0.5
+  sleep 0.2
   system("clear")
+  b = b.next
 end
