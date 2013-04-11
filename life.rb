@@ -1,42 +1,79 @@
+class Matrix
+  class << self
+    def build(row_count, col_count = row_count)
+      new(Array.new(row_count) { Array.new(col_count) { yield } })
+    end
+
+    alias [] new
+  end
+
+  attr_reader :width, :height, :rows
+
+  def initialize(rows)
+    @rows = rows
+    @width = @rows[0].size
+    @height = @rows.size
+  end
+
+  def map_with_coords
+    Matrix[
+      @rows.map.with_index do |row, row_idx|
+        row.map.with_index do |o, col_idx|
+          yield o, row_idx, col_idx
+        end
+      end
+    ]
+  end
+
+  def translate(row_count, col_count)
+    Matrix[
+      @rows.map do |row|
+        row.rotate(row_count)
+      end.rotate(col_count)
+    ]
+  end
+
+  def +(other)
+    Matrix[
+      @rows.zip(other.rows).map do |row1, row2|
+        row1.zip(row2).map { |a, b| a + b }
+      end
+    ]
+  end
+
+  def [](row, col)
+    @rows[row][col]
+  end
+end
+
 class Board
-  attr_reader :size
+  attr_reader :width, :height
 
   def self.random(size)
-    board = Array.new(size) do
-      Array.new(size) { rand(10) == 0 ? 1 : 0 }
-    end
+    board = Matrix.build(size) { rand(10) == 0 ? 1 : 0 }
     new(board)
   end
 
   def self.parse(board_string)
-    new(board_string.split("\n").map { |row| row.split.map(&:to_i) })
+    new(Matrix[board_string.split("\n").map { |row| row.split.map(&:to_i) }])
   end
 
   def initialize(board)
-    if board.size != board[0].size
-      raise "The board has to be square!"
-    end
-
-    @size = board.size
+    @width = board.width
+    @height = board.height
     @board = board
   end
 
   def next
-    board_state = neighbor_counts.zip(@board).map do |row, old_row|
-      row.zip(old_row).map do |c, old_i|
-        if c == 3 || c == 4 && old_i == 1
-          1
-        else
-          0
-        end
-      end
+    board_state = neighbor_counts.map_with_coords do |count, row, col|
+      count == 3 || count == 4 && @board[row, col] == 1 ? 1 : 0
     end
 
     Board.new(board_state)
   end
 
   def to_s
-    @board.map do |row|
+    @board.rows.map do |row|
       row.map do |n|
         n == 1 ? "B" : "·"
       end.join(" ")
@@ -44,33 +81,9 @@ class Board
   end
 
   def neighbor_counts
-    translated_matricies.reduce(Array.new(@size) { Array.new(@size) { 0 } }) do |res, arr|
-      each_coordinate do |row, col|
-        res[row][col] += arr[row][col]
-      end
-
-      res
-    end
-  end
-
-  def translated_matricies
     [-1,0,1].product([-1,0,1]).map do |row, col|
-      rotate_board(row, col)
-    end
-  end
-
-  def rotate_board(row_count, col_count)
-    @board.map do |row|
-      row.rotate(row_count)
-    end.rotate(col_count)
-  end
-
-  def each_coordinate
-    (0...size).each do |row|
-      (0...size).each do |col|
-        yield row, col
-      end
-    end
+      @board.translate(row, col)
+    end.reduce(:+)
   end
 end
 
