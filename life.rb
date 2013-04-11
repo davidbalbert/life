@@ -1,23 +1,11 @@
+require 'matrix'
+
 class Matrix
-  class << self
-    def build(row_count, col_count = row_count)
-      new(Array.new(row_count) { Array.new(col_count) { yield } })
-    end
+  public :rows
 
-    alias [] new
-  end
-
-  attr_reader :width, :height, :rows
-
-  def initialize(rows)
-    @rows = rows
-    @width = @rows[0].size
-    @height = @rows.size
-  end
-
-  def map_with_coords
+  def map_with_index
     Matrix[
-      @rows.map.with_index do |row, row_idx|
+      *rows.map.with_index do |row, row_idx|
         row.map.with_index do |o, col_idx|
           yield o, row_idx, col_idx
         end
@@ -27,22 +15,10 @@ class Matrix
 
   def translate(row_count, col_count)
     Matrix[
-      @rows.map do |row|
+      *rows.map do |row|
         row.rotate(row_count)
       end.rotate(col_count)
     ]
-  end
-
-  def +(other)
-    Matrix[
-      @rows.zip(other.rows).map do |row1, row2|
-        row1.zip(row2).map { |a, b| a + b }
-      end
-    ]
-  end
-
-  def [](row, col)
-    @rows[row][col]
   end
 end
 
@@ -59,13 +35,13 @@ class Board
   end
 
   def initialize(board)
-    @width = board.width
-    @height = board.height
+    @width = board.column_size
+    @height = board.row_size
     @board = board
   end
 
   def next
-    board_state = neighbor_counts.map_with_coords do |count, row, col|
+    board_state = neighbor_counts.map_with_index do |count, row, col|
       count == 3 || count == 4 && @board[row, col] == 1 ? 1 : 0
     end
 
