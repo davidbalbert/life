@@ -4,11 +4,9 @@
 require 'matrix'
 
 class Matrix
-  public :rows
-
   def map_with_index
     Matrix[
-      *rows.map.with_index do |row, row_idx|
+      *row_vectors.map.with_index do |row, row_idx|
         row.map.with_index do |o, col_idx|
           yield o, row_idx, col_idx
         end
@@ -18,8 +16,8 @@ class Matrix
 
   def translate(row_count, col_count)
     Matrix[
-      *rows.map do |row|
-        row.rotate(row_count)
+      *row_vectors.map do |row|
+        row.to_a.rotate(row_count)
       end.rotate(col_count)
     ]
   end
@@ -52,10 +50,10 @@ class Board
   end
 
   def to_s
-    @board.rows.map do |row|
+    @board.row_vectors.map do |row|
       row.map do |n|
         n == 1 ? "B" : "·"
-      end.join(" ")
+      end.to_a.join(" ")
     end.join("\n")
   end
 
