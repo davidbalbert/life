@@ -4,16 +4,6 @@
 require 'matrix'
 
 class Matrix
-  def map_with_index
-    Matrix[
-      *row_vectors.map.with_index do |row, row_idx|
-        row.map.with_index do |o, col_idx|
-          yield o, row_idx, col_idx
-        end
-      end
-    ]
-  end
-
   def translate(row_count, col_count)
     Matrix[
       *row_vectors.map do |row|
@@ -42,8 +32,8 @@ class Board
   end
 
   def next
-    board_state = neighbor_counts.map_with_index do |count, row, col|
-      count == 3 || count == 4 && @board[row, col] == 1 ? 1 : 0
+    board_state = neighbor_counts.map.with_index do |count, idx|
+      count == 3 || count == 4 && @board[idx / width, idx % width] == 1 ? 1 : 0
     end
 
     Board.new(board_state)
