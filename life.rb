@@ -3,44 +3,23 @@
 
 require 'matrix'
 
-class Matrix
-  def translate(row_count, col_count)
-    Matrix[
-      *row_vectors.map do |row|
-        row.to_a.rotate(row_count)
-      end.rotate(col_count)
-    ]
-  end
-end
-
-class Board
-  attr_reader :width, :height
-
+class Board < Matrix
   def self.random(size)
-    board = Matrix.build(size) { rand(10) == 0 ? 1 : 0 }
-    new(board)
+    build(size) { rand(10) == 0 ? 1 : 0 }
   end
 
   def self.parse(board_string)
-    new(Matrix[board_string.split("\n").map { |row| row.split.map(&:to_i) }])
-  end
-
-  def initialize(board)
-    @width = board.column_size
-    @height = board.row_size
-    @board = board
+    Board[board_string.split("\n").map { |row| row.split.map(&:to_i) }]
   end
 
   def next
-    board_state = neighbor_counts.map.with_index do |count, idx|
-      count == 3 || count == 4 && @board[idx / width, idx % width] == 1 ? 1 : 0
+    neighbor_counts.map.with_index do |count, idx|
+      count == 3 || count == 4 && self[idx / column_size, idx % column_size] == 1 ? 1 : 0
     end
-
-    Board.new(board_state)
   end
 
   def to_s
-    @board.row_vectors.map do |row|
+    row_vectors.map do |row|
       row.map do |n|
         n == 1 ? "B" : "·"
       end.to_a.join(" ")
@@ -49,8 +28,16 @@ class Board
 
   def neighbor_counts
     [-1,0,1].product([-1,0,1]).map do |row, col|
-      @board.translate(row, col)
+      translate(row, col)
     end.reduce(:+)
+  end
+
+  def translate(row_count, col_count)
+    Board[
+      *row_vectors.map do |row|
+        row.to_a.rotate(row_count)
+      end.rotate(col_count)
+    ]
   end
 end
 
