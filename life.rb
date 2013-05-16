@@ -42,13 +42,17 @@ class Board < Matrix
 end
 
 if __FILE__ == $0
+  def clear
+    print "\e[2J\e[H"
+  end
+
   b = Board.random(40)
-  system("clear")
+  clear
 
   loop do
     puts b
     sleep 0.2
-    system("clear")
+    clear
     b = b.next
   end
 end
